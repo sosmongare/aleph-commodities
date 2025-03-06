@@ -21,4 +21,4 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
           local-dir: ./  # Deploy all files in the repository
-          server-dir: /public_html/miradi/aleph  # Target directory on CPanel (adjust as needed)
+          server-dir: /public_html/miradi/aleph/  # Target directory on CPanel (adjust as needed)
