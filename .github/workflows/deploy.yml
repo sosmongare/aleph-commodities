@@ -13,24 +13,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Debug Step: List files before uploading
-      - name: List all files in aleph directory
-        run: ls -R ./aleph || echo "Directory not found"
+      # Debug: Check if aleph directory exists
+      - name: Verify directory structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Listing all files:"
+          ls -R || echo "No files found"
 
-      # Ensure the files are properly tarred before uploading
+      # Ensure aleph directory exists before proceeding
+      - name: Check if aleph folder exists
+        run: |
+          if [ -d "./aleph" ]; then
+            echo "✅ aleph directory exists."
+          else
+            echo "❌ aleph directory does NOT exist!"
+            exit 1
+          fi
+
+      # Tar files only if the directory exists
       - name: Create a compressed archive
-        run: tar -czf aleph.tar.gz -C aleph .
+        run: tar -czf aleph.tar.gz -C ./aleph . || echo "Failed to create tar"
 
       # Upload files via SCP
       - name: Deploy files via SCP
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.FTP_HOST }}  # Your CPanel FTP host
+          host: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
           source: aleph.tar.gz
-          target: /public_html/miradi/  # Upload to this directory
+          target: /public_html/miradi/
           overwrite: true
           timeout: 30s
           command_timeout: 10m
