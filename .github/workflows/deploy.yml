@@ -3,7 +3,7 @@ name: Deploy to CPanel
 on:
   push:
     branches:
-      - main  # Trigger deployment when changes are pushed to the main branch
+      - main  # Trigger deployment when changes are pushed to main
 
 jobs:
   deploy:
@@ -12,18 +12,39 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
-      - name: List files in repository
-        run: ls -R
 
-      - name: Deploy files via SFTP
-        # uses: SamKirkland/FTP-Deploy-Action@4.3.0
+      # Debug Step: List files before uploading
+      - name: List all files in aleph directory
+        run: ls -R ./aleph || echo "Directory not found"
+
+      # Ensure the files are properly tarred before uploading
+      - name: Create a compressed archive
+        run: tar -czf aleph.tar.gz -C aleph .
+
+      # Upload files via SCP
+      - name: Deploy files via SCP
         uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.FTP_HOST }}  # Your CPanel FTP host
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          source: aleph.tar.gz
+          target: /public_html/miradi/  # Upload to this directory
+          overwrite: true
+          timeout: 30s
+          command_timeout: 10m
+          use_insecure_cipher: false
+
+      # Extract the tar file on the server
+      - name: Extract files on server
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
-          source: ./aleph/   # Ensure this is pointing to actual files
-          target: /public_html/miradi/aleph/
-          overwrite: true
+          script: |
+            cd /public_html/miradi/
+            tar -xzf aleph.tar.gz
+            rm aleph.tar.gz  # Clean up after extraction
