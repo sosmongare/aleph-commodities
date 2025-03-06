@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
+      - name: List files in repository
+        run: ls -R
 
       - name: Deploy files via SFTP
         # uses: SamKirkland/FTP-Deploy-Action@4.3.0
